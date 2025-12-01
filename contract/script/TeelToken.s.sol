@@ -31,5 +31,8 @@ contract TeelTokenScript is Script {
 
         console.log("Deployment complete!");
         console.log("Token address:", address(token));
+
+        // Write ABI to frontend's abi folder
+        vm.writeJson(json, "frontend/src/abi/TeelToken.json");
     }
 }
