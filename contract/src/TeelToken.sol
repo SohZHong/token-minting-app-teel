@@ -25,7 +25,7 @@ contract TeelToken is ERC20, Ownable, Pausable {
         string memory name_,
         string memory symbol_,
         uint256 threshold_
-    ) ERC20(name_, symbol_) {
+    ) ERC20(name_, symbol_) Ownable(msg.sender) {
         threshold = threshold_;
     }
 
