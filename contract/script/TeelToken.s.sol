@@ -31,12 +31,5 @@ contract TeelTokenScript is Script {
 
         console.log("Deployment complete!");
         console.log("Token address:", address(token));
-
-        // Write ABI to frontend's abi folder
-        string memory artifactPath = "out/TeelToken.sol/TeelToken.json";
-        string memory artifactJson = vm.readFile(artifactPath);
-        // Write ABI array to frontend
-        vm.writeFile("frontend/src/abi/TeelToken.json", artifactJson);
-        console.log("ABI written to frontend/src/abi/TeelToken.json");
     }
 }
