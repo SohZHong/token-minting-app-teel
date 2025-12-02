@@ -70,6 +70,24 @@ forge install
 forge test
 ```
 
+### Running a Local Testnet with Anvil
+
+You can interact with the contract locally using Foundry's Anvil:
+
+1. **Start Anvil**  
+   In a separate terminal, run:
+
+   ```bash
+   anvil
+   ```
+
+   This will start a local Ethereum node at http://127.0.0.1:8545 with pre-funded accounts.
+
+2. **Set `NETWORK` to local**
+   ```bash
+   export NETWORK="local"
+   ```
+
 ### Deploy Contract
 
 The deployment script is designed to automatically select the network based on your `.env` configuration.
@@ -79,7 +97,6 @@ You **do not need to manually specify an RPC URL** in the command, as the script
 ```bash
 source .env
 forge script script/TeelToken.s.sol --private-key $PRIVATE_KEY --verify --broadcast
-
 ```
 
 The script logic is as follows:
@@ -97,6 +114,9 @@ if (keccak256(bytes(network)) == keccak256(bytes("sepolia"))) {
 ```
 
 After broadcasting, it deploys the TeelToken contract and prints the deployed address.
+
+> [!NOTE]
+> If you are deploying locally remove the `--verify` option from the command
 
 #### Adding a New Network
 
