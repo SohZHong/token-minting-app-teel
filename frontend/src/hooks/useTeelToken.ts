@@ -6,8 +6,10 @@ import { useTransaction } from './useTransaction';
 import { CONTRACTS, TEEL_ABI } from '@/constants';
 import { useWalletContext } from '@/context/WalletContext';
 import { CHAINS, type SupportedChain } from '@/configs/chain';
+import { useTxContext } from '@/context/TxContext';
 
 export const useTeelToken = () => {
+  const { addTx } = useTxContext();
   // Contract address (depends on current chain)
   const [contractAddress, setContractAddress] = useState<`0x${string}` | null>(
     null
@@ -24,7 +26,7 @@ export const useTeelToken = () => {
 
   // Only create the transaction hook once the contract exists
   const { hash, isPending, isConfirmed, error, sendTx } = useTransaction(
-    contractAddress ?? '0x0000000000000000000000000000000000000000',
+    contractAddress,
     TEEL_ABI
   );
 
@@ -106,23 +108,38 @@ export const useTeelToken = () => {
       args: [address],
     });
     setBalance(bal as bigint);
-  }, [address, contractAddress]);
+  }, [address, contractAddress, networkMismatch, chainId]);
 
+  // Initial load
   useEffect(() => {
     fetchTokenInfo();
     fetchBalance();
   }, [fetchTokenInfo, fetchBalance]);
+
+  // Refresh after tx is confirmed
+  useEffect(() => {
+    if (isConfirmed) {
+      fetchTokenInfo();
+      fetchBalance();
+    }
+  }, [isConfirmed, fetchTokenInfo, fetchBalance]);
 
   // Mint tokens (Owner only)
   const mint = useCallback(
     async (to: Address, amountHuman: string) => {
       if (!contractAddress) return;
       const amount = parseUnits(amountHuman, 18);
-      await sendTx('mint', [to, amount]);
-      fetchTokenInfo();
-      fetchBalance();
+
+      const result = await sendTx('mint', [to, amount]);
+
+      // Report to global context
+      addTx({
+        hash: result.hash,
+        chainId: chainId as SupportedChain,
+        contract: contractAddress,
+      });
     },
-    [sendTx, fetchTokenInfo, fetchBalance, contractAddress]
+    [sendTx, contractAddress, addTx, chainId]
   );
 
   // Transfer tokens
@@ -130,10 +147,17 @@ export const useTeelToken = () => {
     async (to: Address, amountHuman: string) => {
       if (!contractAddress) return;
       const amount = parseUnits(amountHuman, 18);
-      await sendTx('transfer', [to, amount]);
-      fetchBalance();
+
+      const result = await sendTx('transfer', [to, amount]);
+
+      // Report to global context
+      addTx({
+        hash: result.hash,
+        chainId: chainId as SupportedChain,
+        contract: contractAddress,
+      });
     },
-    [sendTx, fetchBalance, contractAddress]
+    [sendTx, contractAddress, addTx, chainId]
   );
 
   // Human readable values to return to frontend

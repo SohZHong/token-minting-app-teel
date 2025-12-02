@@ -1,11 +1,14 @@
 import './App.css';
 import { WalletProvider } from '@/context/WalletContext';
 import Dashboard from '@/pages/Dashboard';
+import { TxProvider } from './context/TxContext';
 
 function App() {
   return (
     <WalletProvider>
-      <Dashboard />
+      <TxProvider>
+        <Dashboard />
+      </TxProvider>
     </WalletProvider>
   );
 }

@@ -30,7 +30,7 @@ export default function NetworkSwitcher() {
           value=''
         >
           <option value='' disabled>
-            Switch to a supported network
+            Switch network
           </option>
           {supportedChains.map(([id, chain]) => (
             <option key={id} value={id}>

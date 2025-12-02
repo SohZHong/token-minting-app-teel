@@ -1,15 +1,20 @@
-'use client';
-
-import { useState, useCallback, useRef } from 'react';
-import { encodeFunctionData, type Abi, type WalletClient } from 'viem';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { encodeFunctionData, type WalletClient } from 'viem';
 import { getPublicClient, getWalletClient } from '@/lib/viem';
 import type { TxState } from '@/types/transaction';
 import { useWalletContext } from '@/context/WalletContext';
 import type { SupportedChain } from '@/configs/chain';
 import { CHAINS } from '@/configs/chain';
+import { useTxContext } from '@/context/TxContext';
+
+const ZERO = '0x0000000000000000000000000000000000000000';
 
 // Generalized transaction hook for interacting with contracts
-export const useTransaction = (contractAddress: `0x${string}`, abi: any) => {
+export const useTransaction = (
+  contractAddress: `0x${string}` | null,
+  abi: any
+) => {
+  const { addTx } = useTxContext();
   const { chainId, networkMismatch } = useWalletContext();
 
   // Store wallet client in a ref to avoid multiple calls
@@ -21,6 +26,16 @@ export const useTransaction = (contractAddress: `0x${string}`, abi: any) => {
     isConfirmed: false,
     error: null,
   });
+
+  // Rerender state when contract or network changes
+  useEffect(() => {
+    setState({
+      hash: undefined,
+      isPending: false,
+      isConfirmed: false,
+      error: null,
+    });
+  }, [contractAddress, chainId, networkMismatch]);
 
   // Helper to update state for pending transactions
   const setPending = () =>
@@ -45,10 +60,14 @@ export const useTransaction = (contractAddress: `0x${string}`, abi: any) => {
       if (!chainId) throw new Error('Wallet not connected');
       if (networkMismatch)
         throw new Error('Wrong network: cannot send transaction');
-      if (!contractAddress) throw new Error('Contract address not set');
+      if (!contractAddress || contractAddress === ZERO)
+        throw new Error('Contract unavailable on this network');
 
       try {
         setPending();
+
+        // Parse chainId
+        const supportedChainId = chainId as SupportedChain;
 
         // Initialize wallet client only once
         if (!walletClientRef.current) {
@@ -75,8 +94,11 @@ export const useTransaction = (contractAddress: `0x${string}`, abi: any) => {
           chain: chainObj,
         });
 
+        // Add to global Tx context
+        addTx({ hash, chainId: supportedChainId, contract: contractAddress });
+
         // Wait for confirmation
-        const client = getPublicClient(chainId as SupportedChain);
+        const client = getPublicClient(supportedChainId);
         await client.waitForTransactionReceipt({ hash });
 
         setConfirmed(hash);
@@ -87,8 +109,7 @@ export const useTransaction = (contractAddress: `0x${string}`, abi: any) => {
         throw err;
       }
     },
-    [abi, contractAddress, chainId, networkMismatch]
+    [abi, contractAddress, chainId, networkMismatch, addTx]
   );
-
   return { ...state, sendTx };
 };
