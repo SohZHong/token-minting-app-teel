@@ -289,7 +289,7 @@ With more time, the following improvements could be made:
 
 - **Security**
 
-  - Add access control modifiers and overflow checks.
+  - Add access control modifiers checks.
 
 - **Gas Optimization**
 
@@ -304,3 +304,4 @@ With more time, the following improvements could be made:
   - Transferable owners
   - Token burn functionality.
   - Integration with multiple EVM networks and better chain selection in frontend.
+  - The `ThresholdCrossed` or other emitted events can be indexed and displayed to the frontend via subgraphs by The Graph
