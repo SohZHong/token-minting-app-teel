@@ -44,13 +44,14 @@ export ETHERSCAN_API_KEY=<your_etherscan_api_key>
 
 Ensure Foundry is installed. Then in `contract/`:
 
-```sh
+```bash
+cd contract
 forge install
 ```
 
 ### Run Tests
 
-```sh
+```bash
 forge test
 ```
 
@@ -60,9 +61,10 @@ The deployment script is designed to automatically select the network based on y
 
 You **do not need to manually specify an RPC URL** in the command, as the script reads the `NETWORK` environment variable and deploys accordingly:
 
-```sh
+```bash
 source .env
 forge script script/TeelToken.s.sol --private-key $PRIVATE_KEY --verify --broadcast
+
 ```
 
 The script logic is as follows:
@@ -132,3 +134,128 @@ This allows you to call the deployment command without any changes to deploy on 
 > [!IMPORTANT]
 > If the network is not defined in `foundry.toml`, the script will default to deploying locally.
 > Remember to reload `.env` using `source .env` command.
+
+## Frontend Setup
+
+The frontend is a simple React app built with Vite (React) and styled with TailwindCSS. It connects to the deployed `TeelToken` contract using `viem`.
+
+### Install Dependencies
+
+This project uses `bun` for package management.
+
+```bash
+cd frontend
+bun install
+```
+
+### Connecting Frontend to Deployed Contract
+
+You do **not** need to manually configure the contract address or ABI.  
+A helper script `scripts/buildContracts.ts` in the frontend folder will handle this automatically.
+
+#### Usage
+
+```bash
+bun run scripts/buildContracts.ts <ContractName> <FoundryOutFolder> <NetworkId> <DeployedAddress>
+```
+
+**Example**:
+
+```bash
+bun run scripts/buildContracts.ts TeelToken ../contract/out 11155111 0xc5eab97d5ea9fa16a32b937516
+```
+
+This script will automatically:
+
+1. **Generate the ABI**
+
+   - Writes `src/abis/TeelToken.json` from the compiled artifact in the Foundry `out` folder.
+
+2. **Update deployed addresses**
+   - Modifies `src/deployments/contracts.json` to include the deployed address for the given network ID.
+   - If the network or contract entry does not exist, it will be created; if it exists, it will be updated.
+
+**Sample `contracts.json` after running the script:**
+
+```json
+{
+  "31337": {
+    "TEELTOKEN": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+  },
+  "11155111": {
+    "TEELTOKEN": "0xc5EAB97d5Ea9fA16A32b9375169022488a8AE5Cf"
+  }
+}
+```
+
+After running this script, the frontend is fully configured to interact with the deployed contract and ABI so no manual edits are required.
+
+### Frontend Network Configuration
+
+The frontend uses the following files to map supported networks and their explorers:
+
+1. **`frontend/src/configs/chain.ts`**  
+   Maps network IDs to Viem chain objects:
+
+   ```ts
+   import { sepolia, anvil } from 'viem/chains';
+
+   export const CHAINS = {
+     11155111: sepolia,
+     31337: anvil,
+   };
+
+   export type SupportedChain = keyof typeof CHAINS;
+   ```
+
+2. **`frontend/src/constants/chain.ts`**  
+    Maps network IDs to their corresponding blockchain explorers:
+
+   ```ts
+   export const CHAIN_EXPLORERS: Record<number, string | null> = {
+     11155111: 'https://sepolia.etherscan.io/tx/', // Sepolia
+     31337: null, // Localhost (no explorer)
+   };
+   ```
+
+#### Adding a New Network
+
+If you deploy your contract to a new chain, you must update **both** files:
+
+> [!NOTE]
+> Once again, I will be using `celo-alfajores` testnet as example
+
+1. Add the new network to `CHAINS` in `configs/chain.ts` using the Viem chain object for that network (or define a custom chain object).
+
+```ts
+import { sepolia, anvil, alfajores } from 'viem/chains';
+
+export const CHAINS = {
+  11155111: sepolia,
+  31337: anvil,
+  44787: alfajores, // Celo Alfajores Addon
+};
+```
+
+2. Add the corresponding explorer URL in `CHAIN_EXPLORERS` in `constants/chain.ts`:
+
+```ts
+export const CHAIN_EXPLORERS: Record<number, string | null> = {
+  11155111: 'https://sepolia.etherscan.io/tx/',
+  31337: null,
+  44787: 'https://alfajores.celoscan.io/tx/', // Alfajores explorer
+};
+```
+
+> [!NOTE]
+> Both mappings are required for the frontend to display transaction links and interact properly with the new network.
+
+### Running the project
+
+After everything is setup properly, you can run the project using:
+
+```bash
+bun run dev
+```
+
+And access http://localhost:5173
