@@ -4,9 +4,9 @@ import { getPublicClient } from '@/lib/viem';
 import type { Address } from 'viem';
 import { useTransaction } from './useTransaction';
 import { CONTRACTS, TEEL_ABI } from '@/constants';
-import { useWalletContext } from '@/context/WalletContext';
-import { CHAINS, type SupportedChain } from '@/configs/chain';
-import { useTxContext } from '@/context/TxContext';
+import { CHAINS, type SupportedChain } from '@/configs';
+import { useTxContext } from './useTxContext';
+import { useWalletContext } from './useWalletContext';
 
 export const useTeelToken = () => {
   const { latestTx, addTx } = useTxContext();
@@ -184,7 +184,16 @@ export const useTeelToken = () => {
       fetchTokenInfo();
       fetchPausedState();
     }
-  }, [latestTx, contractAddress, networkMismatch, chainId, address]);
+  }, [
+    latestTx,
+    contractAddress,
+    networkMismatch,
+    chainId,
+    address,
+    fetchBalance,
+    fetchPausedState,
+    fetchTokenInfo,
+  ]);
 
   // Mint tokens (Owner only)
   const mint = useCallback(

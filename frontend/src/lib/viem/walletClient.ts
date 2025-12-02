@@ -1,6 +1,5 @@
 import { createWalletClient, custom } from 'viem';
-import { CHAINS } from '@/configs/chain';
-import { DEFAULT_CHAIN } from '@/configs/rpc';
+import { DEFAULT_CHAIN, CHAINS } from '@/configs';
 
 export const getWalletClient = () => {
   if (typeof window === 'undefined') return null;

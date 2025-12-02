@@ -1,5 +1,5 @@
 import { useTeelToken } from '@/hooks/useTeelToken';
-import { useWalletContext } from '@/context/WalletContext';
+import { useWalletContext } from '@/hooks/useWalletContext';
 
 export default function TokenInfo() {
   const { name, symbol, totalSupply, threshold } = useTeelToken();

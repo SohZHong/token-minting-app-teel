@@ -1,4 +1,4 @@
-import { useWalletContext } from '@/context/WalletContext';
+import { useWalletContext } from '@/hooks/useWalletContext';
 
 export default function WalletConnection() {
   const { connect, disconnect, address, isConnected } = useWalletContext();

@@ -1,5 +1,5 @@
 import { createPublicClient, http } from 'viem';
-import { CHAINS, type SupportedChain } from '@/configs/chain';
+import { CHAINS, type SupportedChain } from '@/configs';
 
 export const getPublicClient = (chainId: SupportedChain) => {
   const chain = CHAINS[chainId];

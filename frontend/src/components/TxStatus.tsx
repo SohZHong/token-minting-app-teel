@@ -1,6 +1,6 @@
 import { useTeelToken } from '@/hooks/useTeelToken';
 import { CHAIN_EXPLORERS } from '@/constants/chain';
-import { useTxContext } from '@/context/TxContext';
+import { useTxContext } from '@/hooks/useTxContext';
 
 export default function TxStatus() {
   const { chainId } = useTeelToken();

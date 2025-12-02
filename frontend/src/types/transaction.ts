@@ -1,4 +1,4 @@
-import type { SupportedChain } from '@/configs/chain';
+import type { SupportedChain } from '@/configs';
 
 export type TxState = {
   hash?: `0x${string}`;

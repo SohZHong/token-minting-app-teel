@@ -1,5 +1,5 @@
-import { useWalletContext } from '@/context/WalletContext';
-import { CHAINS, type SupportedChain } from '@/configs/chain';
+import { CHAINS, type SupportedChain } from '@/configs';
+import { useWalletContext } from '@/hooks/useWalletContext';
 import toast from 'react-hot-toast';
 
 export default function NetworkSwitcher() {

@@ -2,10 +2,9 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { encodeFunctionData, type WalletClient } from 'viem';
 import { getPublicClient, getWalletClient } from '@/lib/viem';
 import type { TxState } from '@/types/transaction';
-import { useWalletContext } from '@/context/WalletContext';
-import type { SupportedChain } from '@/configs/chain';
-import { CHAINS } from '@/configs/chain';
-import { useTxContext } from '@/context/TxContext';
+import { CHAINS, type SupportedChain } from '@/configs';
+import { useTxContext } from './useTxContext';
+import { useWalletContext } from './useWalletContext';
 
 const ZERO = '0x0000000000000000000000000000000000000000';
 
