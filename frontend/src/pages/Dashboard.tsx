@@ -4,6 +4,7 @@ import UserBalance from '@/components/UserBalance';
 import MintToken from '@/components/MintToken';
 import TransferToken from '@/components/TransferToken';
 import TxStatus from '@/components/TxStatus';
+import NetworkSwitcher from '@/components/NetworkSwitcher';
 
 export default function Dashboard() {
   return (
@@ -11,6 +12,7 @@ export default function Dashboard() {
       <h1 className='text-3xl font-bold text-center'>TeelToken Dashboard</h1>
 
       <WalletConnection />
+      <NetworkSwitcher />
       <TokenInfo />
       <UserBalance />
       <MintToken />
