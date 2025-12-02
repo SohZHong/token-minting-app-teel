@@ -3,8 +3,8 @@ pragma solidity ^0.8.20;
 
 import {Test} from "forge-std/Test.sol";
 import {TeelToken} from "../src/TeelToken.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
 
 contract TeelTokenTest is Test {
     TeelToken token;
@@ -123,7 +123,7 @@ contract TeelTokenTest is Test {
 
         // transfer
         vm.prank(addr1);
-        token.transfer(addr2, 20 ether);
+        require(token.transfer(addr2, 20 ether), "Transfer failed");
         assertEq(token.balanceOf(addr2), 20 ether);
         assertEq(token.balanceOf(addr1), 30 ether);
 
@@ -132,7 +132,7 @@ contract TeelTokenTest is Test {
         token.approve(addr2, 30 ether);
 
         vm.prank(addr2);
-        token.transferFrom(addr1, addr2, 30 ether);
+        require(token.transferFrom(addr1, addr2, 30 ether), "Transfer failed");
         assertEq(token.balanceOf(addr2), 50 ether);
         assertEq(token.balanceOf(addr1), 0);
     }
