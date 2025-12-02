@@ -1,12 +1,9 @@
-'use client';
-
 import { useState, useEffect, useCallback } from 'react';
 import { parseUnits, formatUnits } from 'viem';
 import { publicClient } from '@/lib/viem';
 import type { Address } from 'viem';
 import { useTransaction } from './useTransaction';
 import { CONTRACTS, TEEL_ABI } from '@/constants';
-import { readContract } from 'viem/actions';
 import { useWallet } from './useWallet';
 
 export const useTeelToken = () => {
@@ -16,7 +13,7 @@ export const useTeelToken = () => {
   );
 
   // User
-  const { address } = useWallet();
+  const { address, isConnected } = useWallet();
 
   // Token info
   const [name, setName] = useState('');
@@ -33,6 +30,8 @@ export const useTeelToken = () => {
 
   // Set contract address based on current chain
   useEffect(() => {
+    // Set contract address only after connection
+    if (!isConnected) return;
     const fetchContractAddress = async () => {
       const chainId = await publicClient.getChainId();
       const addr = CONTRACTS[chainId]?.TEEL_TOKEN;
@@ -40,28 +39,29 @@ export const useTeelToken = () => {
       setContractAddress(addr);
     };
     fetchContractAddress();
-  }, []);
+  }, [isConnected]);
 
   // Fetch token info
   const fetchTokenInfo = useCallback(async () => {
     if (!address || !contractAddress) return;
+    // Read all token information from contract 1 by 1
     const [n, s, supply, th] = await Promise.all([
-      readContract(publicClient, {
+      publicClient.readContract({
         address: contractAddress,
         abi: TEEL_ABI,
         functionName: 'name',
       }),
-      readContract(publicClient, {
+      publicClient.readContract({
         address: contractAddress,
         abi: TEEL_ABI,
         functionName: 'symbol',
       }),
-      readContract(publicClient, {
+      publicClient.readContract({
         address: contractAddress,
         abi: TEEL_ABI,
         functionName: 'totalSupply',
       }),
-      readContract(publicClient, {
+      publicClient.readContract({
         address: contractAddress,
         abi: TEEL_ABI,
         functionName: 'threshold',
@@ -75,7 +75,7 @@ export const useTeelToken = () => {
 
   const fetchBalance = useCallback(async () => {
     if (!contractAddress) return;
-    const bal = await readContract(publicClient, {
+    const bal = await publicClient.readContract({
       address: contractAddress,
       abi: TEEL_ABI,
       functionName: 'balanceOf',
