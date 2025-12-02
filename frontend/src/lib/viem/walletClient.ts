@@ -2,7 +2,7 @@ import { createWalletClient, custom } from 'viem';
 import { CHAINS } from '@/configs/chain';
 import { DEFAULT_CHAIN } from '@/configs/rpc';
 
-export function getWalletClient() {
+export const getWalletClient = () => {
   if (typeof window === 'undefined') return null;
 
   const provider = (window as any).ethereum;
@@ -12,4 +12,4 @@ export function getWalletClient() {
     chain: CHAINS[DEFAULT_CHAIN],
     transport: custom(provider),
   });
-}
+};

@@ -1,9 +1,12 @@
 import { createPublicClient, http } from 'viem';
-import { CHAINS } from '@/configs/chain';
-import { DEFAULT_CHAIN, RPC_URLS } from '@/configs/rpc';
+import { CHAINS, type SupportedChain } from '@/configs/chain';
 
-// Read interactions
-export const publicClient = createPublicClient({
-  chain: CHAINS[DEFAULT_CHAIN],
-  transport: http(RPC_URLS[DEFAULT_CHAIN]),
-});
+export const getPublicClient = (chainId: SupportedChain) => {
+  const chain = CHAINS[chainId];
+  if (!chain) throw new Error(`Unsupported chain: ${chainId}`);
+
+  return createPublicClient({
+    chain,
+    transport: http(),
+  });
+};

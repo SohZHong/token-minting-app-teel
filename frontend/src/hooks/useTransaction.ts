@@ -1,12 +1,20 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { encodeFunctionData } from 'viem';
-import { getWalletClient, publicClient } from '@/lib/viem';
+import { useState, useCallback, useRef } from 'react';
+import { encodeFunctionData, type Abi, type WalletClient } from 'viem';
+import { getPublicClient, getWalletClient } from '@/lib/viem';
 import type { TxState } from '@/types/transaction';
+import { useWalletContext } from '@/context/WalletContext';
+import type { SupportedChain } from '@/configs/chain';
+import { CHAINS } from '@/configs/chain';
 
 // Generalized transaction hook for interacting with contracts
 export const useTransaction = (contractAddress: `0x${string}`, abi: any) => {
+  const { chainId, networkMismatch } = useWalletContext();
+
+  // Store wallet client in a ref to avoid multiple calls
+  const walletClientRef = useRef<WalletClient>(null);
+
   const [state, setState] = useState<TxState>({
     hash: undefined,
     isPending: false,
@@ -34,24 +42,42 @@ export const useTransaction = (contractAddress: `0x${string}`, abi: any) => {
   // Send a single transaction to the contract
   const sendTx = useCallback(
     async (functionName: string, args: any[] = [], value?: bigint) => {
+      if (!chainId) throw new Error('Wallet not connected');
+      if (networkMismatch)
+        throw new Error('Wrong network: cannot send transaction');
+      if (!contractAddress) throw new Error('Contract address not set');
+
       try {
         setPending();
 
-        const walletClient = getWalletClient();
-        if (!walletClient) throw new Error('Wallet not found');
+        // Initialize wallet client only once
+        if (!walletClientRef.current) {
+          const client = getWalletClient();
+          if (!client) throw new Error('Wallet not found');
+          walletClientRef.current = client;
+        }
+        const walletClient = walletClientRef.current;
 
         const [account] = await walletClient.requestAddresses();
 
+        // Encode the function call
         const data = encodeFunctionData({ abi, functionName, args });
 
+        // Get chain object
+        const chainObj = CHAINS[chainId as keyof typeof CHAINS];
+
+        // Send transaction
         const hash = await walletClient.sendTransaction({
           account,
           to: contractAddress,
           data,
           value: value ?? 0n,
+          chain: chainObj,
         });
 
-        await publicClient.waitForTransactionReceipt({ hash });
+        // Wait for confirmation
+        const client = getPublicClient(chainId as SupportedChain);
+        await client.waitForTransactionReceipt({ hash });
 
         setConfirmed(hash);
 
@@ -61,7 +87,7 @@ export const useTransaction = (contractAddress: `0x${string}`, abi: any) => {
         throw err;
       }
     },
-    [abi, contractAddress]
+    [abi, contractAddress, chainId, networkMismatch]
   );
 
   return { ...state, sendTx };

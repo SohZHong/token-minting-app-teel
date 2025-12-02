@@ -1,21 +1,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { parseUnits, formatUnits } from 'viem';
-import { publicClient } from '@/lib/viem';
+import { getPublicClient } from '@/lib/viem';
 import type { Address } from 'viem';
 import { useTransaction } from './useTransaction';
 import { CONTRACTS, TEEL_ABI } from '@/constants';
 import { useWalletContext } from '@/context/WalletContext';
+import { CHAINS, type SupportedChain } from '@/configs/chain';
 
 export const useTeelToken = () => {
   // Contract address (depends on current chain)
   const [contractAddress, setContractAddress] = useState<`0x${string}` | null>(
     null
   );
-  // Chain Id
-  const [chainId, setChainId] = useState<number | null>(null);
-
   // User
-  const { address, isConnected } = useWalletContext();
+  const { address, chainId, isConnected, networkMismatch } = useWalletContext();
 
   // Token info
   const [name, setName] = useState('');
@@ -23,7 +21,8 @@ export const useTeelToken = () => {
   const [totalSupply, setTotalSupply] = useState<bigint>(0n);
   const [threshold, setThreshold] = useState<bigint>(0n);
   const [balance, setBalance] = useState<bigint>(0n);
-  // Transaction hook
+
+  // Only create the transaction hook once the contract exists
   const { hash, isPending, isConfirmed, error, sendTx } = useTransaction(
     contractAddress ?? '0x0000000000000000000000000000000000000000',
     TEEL_ABI
@@ -31,61 +30,76 @@ export const useTeelToken = () => {
 
   // Set contract address based on current chain
   useEffect(() => {
-    // Set contract address only after connection
-    if (!isConnected) return;
+    if (!isConnected || !chainId) return;
 
-    const loadChainAndContract = async () => {
-      const id = await publicClient.getChainId();
-      setChainId(id);
+    // If the user is on a chain where the contract is not deployed
+    if (networkMismatch) {
+      console.warn(`Contract not deployed on chain ${chainId}`);
+      setContractAddress(null); // Clear any previous contract address
+      return;
+    }
 
-      const addr = CONTRACTS[id]?.TEEL_TOKEN;
+    const loadContract = async () => {
+      const addr = CONTRACTS[chainId]?.TEEL_TOKEN;
       if (!addr) {
-        console.warn(`No TeelToken deployed on chain ${id}`);
+        console.warn(`No TeelToken deployed on chain ${chainId}`);
         return;
       }
       setContractAddress(addr);
     };
 
-    loadChainAndContract();
-  }, [isConnected]);
+    loadContract();
+  }, [isConnected, chainId, networkMismatch]);
 
   // Fetch token info
   const fetchTokenInfo = useCallback(async () => {
-    if (!address || !contractAddress) return;
-    // Read all token information from contract 1 by 1
+    if (!address || !contractAddress || networkMismatch || !chainId) return;
+
+    // Ensure chainId is a supported chain
+    if (!(chainId in CHAINS)) return;
+    const supportedChainId = chainId as SupportedChain;
+
+    const client = getPublicClient(supportedChainId);
+
     const [n, s, supply, th] = await Promise.all([
-      publicClient.readContract({
+      client.readContract({
         address: contractAddress,
         abi: TEEL_ABI,
         functionName: 'name',
       }),
-      publicClient.readContract({
+      client.readContract({
         address: contractAddress,
         abi: TEEL_ABI,
         functionName: 'symbol',
       }),
-      publicClient.readContract({
+      client.readContract({
         address: contractAddress,
         abi: TEEL_ABI,
         functionName: 'totalSupply',
       }),
-      publicClient.readContract({
+      client.readContract({
         address: contractAddress,
         abi: TEEL_ABI,
         functionName: 'threshold',
       }),
     ]);
-    console.log(supply);
-    console.log(name);
+
     setName(n as string);
     setSymbol(s as string);
     setTotalSupply(supply as bigint);
     setThreshold(th as bigint);
-  }, [contractAddress]);
+  }, [address, contractAddress, networkMismatch, chainId]);
 
   const fetchBalance = useCallback(async () => {
-    if (!contractAddress) return;
-    const bal = await publicClient.readContract({
+    if (!address || !contractAddress || networkMismatch || !chainId) return;
+
+    // Ensure chainId is a supported chain
+    if (!(chainId in CHAINS)) return;
+    const supportedChainId = chainId as SupportedChain;
+
+    const client = getPublicClient(supportedChainId);
+
+    const bal = await client.readContract({
       address: contractAddress,
       abi: TEEL_ABI,
       functionName: 'balanceOf',

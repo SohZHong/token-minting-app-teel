@@ -1,29 +1,95 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+} from 'react';
 import { getWalletClient } from '@/lib/viem';
+import { CHAINS, type SupportedChain } from '@/configs/chain';
+import type { WalletClient } from 'viem';
 
 type WalletContextType = {
   address: `0x${string}` | null;
   isConnected: boolean;
+  chainId: number | null;
+  networkMismatch: boolean;
   connect: () => Promise<void>;
+  switchNetwork?: (targetChainId?: SupportedChain) => Promise<void>;
 };
 
-// Create a global context provider to act as store
 const WalletContext = createContext<WalletContextType | null>(null);
 
 export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [address, setAddress] = useState<`0x${string}` | null>(null);
+  const [chainId, setChainId] = useState<number | null>(null);
+  const [networkMismatch, setNetworkMismatch] = useState(false);
+
+  // Store wallet client in a ref to avoid multiple calls
+  const walletClientRef = useRef<WalletClient>(null);
 
   const connect = useCallback(async () => {
-    const walletClient = getWalletClient();
-    if (!walletClient) throw new Error('No wallet detected');
+    try {
+      // Initialize wallet client only once
+      if (!walletClientRef.current) {
+        const client = getWalletClient();
+        if (!client) throw new Error('No wallet detected');
+        walletClientRef.current = client;
+      }
 
-    const [acc] = await walletClient.requestAddresses();
-    setAddress(acc);
+      const client = walletClientRef.current;
+
+      // Request addresses
+      const [acc] = await client.requestAddresses();
+      setAddress(acc);
+
+      // Detect chain
+      const id = await client.getChainId();
+      setChainId(id);
+
+      // Check network support
+      setNetworkMismatch(!(id in CHAINS));
+    } catch (err) {
+      console.error('Wallet connect failed:', err);
+    }
+  }, []);
+
+  const switchNetwork = useCallback(async (targetChainId?: SupportedChain) => {
+    try {
+      const client = walletClientRef.current;
+      if (!client) throw new Error('Wallet not connected');
+
+      // If no chain ID provided, pick the first supported chain
+      const chainIdToSwitch =
+        targetChainId ?? parseInt(Object.keys(CHAINS)[0], 10);
+
+      await client.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: `0x${chainIdToSwitch.toString(16)}` }],
+      });
+
+      setChainId(chainIdToSwitch);
+      setNetworkMismatch(false);
+    } catch (switchError: any) {
+      // 4902 = chain not added in wallet
+      if (switchError.code === 4902) {
+        console.warn('Chain not added in wallet');
+      } else {
+        console.error('Switch network failed:', switchError);
+      }
+    }
   }, []);
 
   return (
     <WalletContext.Provider
-      value={{ address, isConnected: Boolean(address), connect }}
+      value={{
+        address,
+        isConnected: Boolean(address),
+        chainId,
+        networkMismatch,
+        connect,
+        switchNetwork,
+      }}
     >
       {children}
     </WalletContext.Provider>
