@@ -54,7 +54,7 @@ export default function PauseControls() {
   return (
     <section className='p-4 rounded-lg border shadow-sm'>
       <h2 className='text-xl font-semibold mb-3'>
-        6. Pause / Unpause (Owner Only)
+        7. Pause / Unpause (Owner Only)
       </h2>
       <p>Status: {paused ? 'Paused' : 'Active'}</p>
       <div className='mt-3 flex gap-3 justify-center'>

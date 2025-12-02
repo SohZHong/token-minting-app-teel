@@ -249,6 +249,33 @@ export const useTeelToken = () => {
     [sendTx, contractAddress, addTx, chainId]
   );
 
+  // Update threshold
+  const updateThreshold = useCallback(
+    async (amountHuman: string) => {
+      if (!contractAddress) {
+        return {
+          success: false,
+          reason: 'Contract not available on this network',
+        };
+      }
+      const amount = parseUnits(amountHuman, 18);
+
+      const result = await sendTx('updateThreshold', [amount]);
+
+      // Report to global context only if there is a hash
+      if (result.hash) {
+        addTx({
+          hash: result.hash,
+          chainId: chainId as SupportedChain,
+          contract: contractAddress,
+        });
+      }
+
+      return result;
+    },
+    [sendTx, contractAddress, addTx, chainId]
+  );
+
   // Pause operations
   const pause = useCallback(async () => {
     if (!contractAddress) {
@@ -312,6 +339,7 @@ export const useTeelToken = () => {
     // Transactions
     mint,
     transfer,
+    updateThreshold,
     pause,
     unpause,
     hash,

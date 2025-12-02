@@ -6,6 +6,7 @@ import TransferToken from '@/components/TransferToken';
 import TxStatus from '@/components/TxStatus';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
 import PauseControls from '@/components/PauseControls';
+import UpdateThreshold from '@/components/UpdateThreshold';
 
 export default function Dashboard() {
   return (
@@ -18,6 +19,7 @@ export default function Dashboard() {
       <UserBalance />
       <MintToken />
       <TransferToken />
+      <UpdateThreshold />
       <PauseControls />
       <TxStatus />
     </div>
