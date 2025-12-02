@@ -54,6 +54,18 @@ export const useTeelToken = () => {
     loadContract();
   }, [isConnected, chainId, networkMismatch]);
 
+  // Reset state when switching networks
+  useEffect(() => {
+    if (!contractAddress) {
+      setName('');
+      setSymbol('');
+      setTotalSupply(0n);
+      setThreshold(0n);
+      setBalance(0n);
+      setPaused(false);
+    }
+  }, [contractAddress]);
+
   // Fetch token info
   const fetchTokenInfo = useCallback(async () => {
     if (!address || !contractAddress || networkMismatch || !chainId) return;
@@ -125,12 +137,14 @@ export const useTeelToken = () => {
     setPaused(pausedState as boolean);
   }, [contractAddress, networkMismatch, chainId]);
 
-  // Initial load
+  // Initial load after contract is fetched
   useEffect(() => {
+    if (!contractAddress) return;
+
     fetchTokenInfo();
     fetchBalance();
     fetchPausedState();
-  }, [fetchTokenInfo, fetchBalance, fetchPausedState]);
+  }, [contractAddress, fetchTokenInfo, fetchBalance, fetchPausedState]);
 
   // Whenever a transaction is confirmed, refetch data
   useEffect(() => {
