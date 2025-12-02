@@ -1,0 +1,39 @@
+import { useState } from 'react';
+import { useTeelToken } from '@/hooks/useTeelToken';
+import type { Address } from 'viem';
+
+export default function TransferTokens() {
+  const { transfer, symbol } = useTeelToken();
+  const [to, setTo] = useState('');
+  const [amount, setAmount] = useState('');
+
+  return (
+    <section className='p-4 rounded-lg border shadow-sm'>
+      <h2 className='text-xl font-semibold mb-3'>5. Transfer Tokens</h2>
+
+      <div className='space-y-3'>
+        <input
+          value={to}
+          onChange={(e) => setTo(e.target.value)}
+          placeholder='Recipient address'
+          className='w-full p-2 border rounded-md focus:ring focus:ring-blue-200'
+        />
+
+        <input
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder={`Amount (${symbol})`}
+          className='w-full p-2 border rounded-md focus:ring focus:ring-blue-200'
+        />
+
+        <button
+          onClick={() => transfer(to as Address, amount)}
+          disabled={!to || !amount}
+          className='w-full py-2 bg-blue-600 text-white rounded-lg disabled:bg-gray-400 hover:bg-blue-700 transition'
+        >
+          Transfer Tokens
+        </button>
+      </div>
+    </section>
+  );
+}

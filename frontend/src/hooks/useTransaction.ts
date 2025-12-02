@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { encodeFunctionData } from 'viem';
-import { walletClient, publicClient } from '@/lib/viem';
+import { getWalletClient, publicClient } from '@/lib/viem';
 import type { TxState } from '@/types/transaction';
 
 // Generalized transaction hook for interacting with contracts
@@ -42,8 +42,10 @@ export const useTransaction = (contractAddress: `0x${string}`, abi: any) => {
         setPending();
 
         // Get address from wallet client
-        const [account] = await walletClient!.requestAddresses();
+        const walletClient = getWalletClient();
+        if (!walletClient) throw new Error('No wallet detected');
 
+        const [account] = await walletClient.requestAddresses();
         // Function data
         const data = encodeFunctionData({
           abi,

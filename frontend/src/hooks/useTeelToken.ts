@@ -11,6 +11,8 @@ export const useTeelToken = () => {
   const [contractAddress, setContractAddress] = useState<`0x${string}` | null>(
     null
   );
+  // Chain Id
+  const [chainId, setChainId] = useState<number | null>(null);
 
   // User
   const { address, isConnected } = useWallet();
@@ -34,6 +36,7 @@ export const useTeelToken = () => {
     if (!isConnected) return;
     const fetchContractAddress = async () => {
       const chainId = await publicClient.getChainId();
+      setChainId(chainId);
       const addr = CONTRACTS[chainId]?.TEEL_TOKEN;
       if (!addr) throw new Error(`No TEEL_TOKEN deployed on chain ${chainId}`);
       setContractAddress(addr);
@@ -120,6 +123,9 @@ export const useTeelToken = () => {
   return {
     // Address
     contractAddress,
+
+    // Chain Id,
+    chainId,
 
     // Token info
     name,
