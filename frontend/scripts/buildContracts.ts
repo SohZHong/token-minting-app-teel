@@ -56,6 +56,7 @@ if (!contracts[networkId]) {
   contracts[networkId] = {} as Record<string, `0x${string}`>;
 }
 
+// Make contract name that work as keys in the json file to all be uppercases
 contracts[networkId][contractName.toUpperCase()] =
   deployedAddress as `0x${string}`;
 
