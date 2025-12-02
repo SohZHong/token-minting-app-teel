@@ -1,5 +1,3 @@
-import TEEL_ARTIFACT from '@/artifacts/TeelToken.json';
-
-const TEEL_ABI = TEEL_ARTIFACT.abi;
+import TEEL_ABI from '@/abis/TeelToken.json';
 
 export { TEEL_ABI };

@@ -43,7 +43,7 @@ export const useTeelToken = () => {
     }
 
     const loadContract = async () => {
-      const addr = CONTRACTS[chainId]?.TEEL_TOKEN;
+      const addr = CONTRACTS[chainId]?.TEELTOKEN;
       if (!addr) {
         console.warn(`No TeelToken deployed on chain ${chainId}`);
         return;
