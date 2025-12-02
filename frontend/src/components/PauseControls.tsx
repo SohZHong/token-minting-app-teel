@@ -11,10 +11,19 @@ export default function PauseControls() {
     setIsPauseLoading(true);
     const toastId = toast.loading('Pausing...');
     try {
-      await pause();
-      toast.success('Contract paused!', { id: toastId });
+      const result = await pause();
+
+      // If user rejected the tx in MetaMask
+      if (!result.success) {
+        toast.error(result.reason, { id: toastId });
+        return;
+      }
+
+      // Success
+      toast.success(result.reason, { id: toastId });
     } catch (err: any) {
-      toast.error(`Pause failed: ${err.message || err}`, { id: toastId });
+      // Unexpected JS errors
+      toast.error(`Unexpected error: ${err.message || err}`, { id: toastId });
     } finally {
       setIsPauseLoading(false);
     }
@@ -24,10 +33,19 @@ export default function PauseControls() {
     setIsUnpauseLoading(true);
     const toastId = toast.loading('Unpausing...');
     try {
-      await unpause();
-      toast.success('Contract unpaused!', { id: toastId });
+      const result = await unpause();
+
+      // If user rejected the tx in MetaMask
+      if (!result.success) {
+        toast.error(result.reason, { id: toastId });
+        return;
+      }
+
+      // Success
+      toast.success(result.reason, { id: toastId });
     } catch (err: any) {
-      toast.error(`Unpause failed: ${err.message || err}`, { id: toastId });
+      // Unexpected JS errors
+      toast.error(`Unexpected error: ${err.message || err}`, { id: toastId });
     } finally {
       setIsUnpauseLoading(false);
     }
@@ -35,7 +53,9 @@ export default function PauseControls() {
 
   return (
     <section className='p-4 rounded-lg border shadow-sm'>
-      <h2 className='text-xl font-semibold mb-3'>6. Pause / Unpause</h2>
+      <h2 className='text-xl font-semibold mb-3'>
+        6. Pause / Unpause (Owner Only)
+      </h2>
       <p>Status: {paused ? 'Paused' : 'Active'}</p>
       <div className='mt-3 flex gap-3 justify-center'>
         <button

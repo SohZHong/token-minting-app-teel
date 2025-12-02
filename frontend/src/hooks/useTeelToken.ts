@@ -168,17 +168,26 @@ export const useTeelToken = () => {
   // Mint tokens (Owner only)
   const mint = useCallback(
     async (to: Address, amountHuman: string) => {
-      if (!contractAddress) return;
+      if (!contractAddress) {
+        return {
+          success: false,
+          reason: 'Contract not available on this network',
+        };
+      }
       const amount = parseUnits(amountHuman, 18);
 
       const result = await sendTx('mint', [to, amount]);
 
-      // Report to global context
-      addTx({
-        hash: result.hash,
-        chainId: chainId as SupportedChain,
-        contract: contractAddress,
-      });
+      // Report to global context only if there is a hash
+      if (result.hash) {
+        addTx({
+          hash: result.hash,
+          chainId: chainId as SupportedChain,
+          contract: contractAddress,
+        });
+      }
+
+      return result;
     },
     [sendTx, contractAddress, addTx, chainId]
   );
@@ -186,43 +195,68 @@ export const useTeelToken = () => {
   // Transfer tokens
   const transfer = useCallback(
     async (to: Address, amountHuman: string) => {
-      if (!contractAddress) return;
+      if (!contractAddress) {
+        return {
+          success: false,
+          reason: 'Contract not available on this network',
+        };
+      }
       const amount = parseUnits(amountHuman, 18);
 
       const result = await sendTx('transfer', [to, amount]);
 
-      // Report to global context
-      addTx({
-        hash: result.hash,
-        chainId: chainId as SupportedChain,
-        contract: contractAddress,
-      });
+      // Report to global context only if there is a hash
+      if (result.hash) {
+        addTx({
+          hash: result.hash,
+          chainId: chainId as SupportedChain,
+          contract: contractAddress,
+        });
+      }
+
+      return result;
     },
     [sendTx, contractAddress, addTx, chainId]
   );
 
   // Pause operations
   const pause = useCallback(async () => {
-    if (!contractAddress) return;
-
+    if (!contractAddress) {
+      return {
+        success: false,
+        reason: 'Contract not available on this network',
+      };
+    }
     const result = await sendTx('pauseMinting', []);
-    addTx({
-      hash: result.hash,
-      chainId: chainId as SupportedChain,
-      contract: contractAddress,
-    });
+    // Report to global context only if there is a hash
+    if (result.hash) {
+      addTx({
+        hash: result.hash,
+        chainId: chainId as SupportedChain,
+        contract: contractAddress,
+      });
+    }
+    return result;
   }, [sendTx, contractAddress, addTx, chainId]);
 
   // Unpause operations
   const unpause = useCallback(async () => {
-    if (!contractAddress) return;
-
+    if (!contractAddress) {
+      return {
+        success: false,
+        reason: 'Contract not available on this network',
+      };
+    }
     const result = await sendTx('unpauseMinting', []);
-    addTx({
-      hash: result.hash,
-      chainId: chainId as SupportedChain,
-      contract: contractAddress,
-    });
+    // Report to global context only if there is a hash
+    if (result.hash) {
+      addTx({
+        hash: result.hash,
+        chainId: chainId as SupportedChain,
+        contract: contractAddress,
+      });
+    }
+    return result;
   }, [sendTx, contractAddress, addTx, chainId]);
 
   // Human readable values to return to frontend

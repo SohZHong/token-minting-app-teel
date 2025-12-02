@@ -46,14 +46,6 @@ export const useTransaction = (
       error: null,
     });
 
-  // Helper to update state for confirmed transactions
-  const setConfirmed = (hash: `0x${string}`) =>
-    setState({ hash, isPending: false, isConfirmed: true, error: null });
-
-  // Helper to update state for errors
-  const setError = (err: Error) =>
-    setState((prev) => ({ ...prev, isPending: false, error: err }));
-
   // Send a single transaction to the contract
   const sendTx = useCallback(
     async (functionName: string, args: any[] = [], value?: bigint) => {
@@ -86,27 +78,73 @@ export const useTransaction = (
         const chainObj = CHAINS[chainId as keyof typeof CHAINS];
 
         // Send transaction
-        const hash = await walletClient.sendTransaction({
-          account,
-          to: contractAddress,
-          data,
-          value: value ?? 0n,
-          chain: chainObj,
-        });
+        let hash: `0x${string}`;
+        try {
+          hash = await walletClient.sendTransaction({
+            account,
+            to: contractAddress,
+            data,
+            value: value ?? 0n,
+            chain: chainObj,
+          });
+        } catch (err: any) {
+          // User rejected transaction
+          if (err?.code === 4001)
+            return {
+              success: false,
+              reason: 'User rejected transaction',
+              error: err,
+            };
+
+          return {
+            success: false,
+            reason: err?.message || 'Failed to send transaction',
+            error: err,
+          };
+        }
 
         // Add to global Tx context
         addTx({ hash, chainId: supportedChainId, contract: contractAddress });
 
         // Wait for confirmation
         const client = getPublicClient(supportedChainId);
-        await client.waitForTransactionReceipt({ hash });
+        try {
+          const receipt = await client.waitForTransactionReceipt({
+            hash,
+          });
 
-        setConfirmed(hash);
+          // If the receipt has status: "reverted"
+          if (receipt.status === 'reverted') {
+            return {
+              success: false,
+              hash,
+              reason: 'Transaction reverted on-chain',
+              error: receipt,
+            };
+          }
+        } catch (err: any) {
+          // Try extracting a readable revert reason
+          const reason =
+            err?.shortMessage ||
+            err?.details ||
+            err?.message ||
+            'Transaction failed on-chain';
 
-        return { hash, isPending: false, isConfirmed: true, error: null };
-      } catch (err) {
-        setError(err as Error);
-        throw err;
+          return { success: false, hash, reason, error: err };
+        }
+        // Success
+        setState({ hash, isPending: false, isConfirmed: true, error: null });
+        return { success: true, hash, reason: 'Transaction confirmed!' };
+      } catch (err: any) {
+        // Unknown internal error
+        const msg =
+          err?.shortMessage ||
+          err?.details ||
+          err?.message ||
+          'Unexpected transaction error';
+
+        setState((s) => ({ ...s, isPending: false, error: err }));
+        return { success: false, reason: msg, error: err };
       }
     },
     [abi, contractAddress, chainId, networkMismatch, addTx]

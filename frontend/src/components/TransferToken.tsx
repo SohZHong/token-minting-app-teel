@@ -16,10 +16,19 @@ export default function TransferTokens() {
     const toastId = toast.loading('Transferring tokens...');
 
     try {
-      await transfer(to as Address, amount);
-      toast.success('Transfer successful!', { id: toastId });
+      const result = await transfer(to as Address, amount);
+
+      // If user rejected the tx in MetaMask
+      if (!result.success) {
+        toast.error(result.reason, { id: toastId });
+        return;
+      }
+
+      // Success
+      toast.success(result.reason, { id: toastId });
     } catch (err: any) {
-      toast.error(`Transfer failed: ${err.message || err}`, { id: toastId });
+      // Unexpected JS errors
+      toast.error(`Unexpected error: ${err.message || err}`, { id: toastId });
     } finally {
       setIsLoading(false);
     }
