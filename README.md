@@ -274,3 +274,33 @@ bun run dev
 ```
 
 And access http://localhost:5173
+
+## Assumptions & Limitations
+
+- Only the contract owner can mint tokens.
+- The threshold event `ThresholdCrossed` is emitted once when total supply crosses the threshold.
+- By default, the app works with the Sepolia testnet network and local network initiated via `anvil`.
+- The frontend assumes the ABI and contract addresses are updated via `scripts/buildContracts.ts`.
+- The app uses public RPC endpoints so contract reads will rate limited and sometimes unresponsive. (A refresh would work)
+
+## Future Improvements
+
+With more time, the following improvements could be made:
+
+- **Security**
+
+  - Add access control modifiers and overflow checks.
+
+- **Gas Optimization**
+
+  - Optimize minting and transfer functions to reduce transaction costs.
+
+- **UI / UX Enhancements**
+
+  - Better feedback on transactions (pending, confirmed, failed).
+  - Improved layout, responsive design, and error handling.
+
+- **Additional Features**
+  - Transferable owners
+  - Token burn functionality.
+  - Integration with multiple EVM networks and better chain selection in frontend.
