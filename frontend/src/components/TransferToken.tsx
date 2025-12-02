@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTeelToken } from '@/hooks/useTeelToken';
 import type { Address } from 'viem';
+import toast from 'react-hot-toast';
 
 export default function TransferTokens() {
   const { transfer, symbol } = useTeelToken();
@@ -9,9 +10,16 @@ export default function TransferTokens() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleTransfer = async () => {
+    if (!to || !amount) return;
+
     setIsLoading(true);
+    const toastId = toast.loading('Transferring tokens...');
+
     try {
       await transfer(to as Address, amount);
+      toast.success('Transfer successful!', { id: toastId });
+    } catch (err: any) {
+      toast.error(`Transfer failed: ${err.message || err}`, { id: toastId });
     } finally {
       setIsLoading(false);
     }

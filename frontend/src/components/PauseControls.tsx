@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useTeelToken } from '@/hooks/useTeelToken';
+import toast from 'react-hot-toast';
 
 export default function PauseControls() {
   const { paused, pause, unpause } = useTeelToken();
@@ -8,8 +9,12 @@ export default function PauseControls() {
 
   const handlePause = async () => {
     setIsPauseLoading(true);
+    const toastId = toast.loading('Pausing...');
     try {
       await pause();
+      toast.success('Contract paused!', { id: toastId });
+    } catch (err: any) {
+      toast.error(`Pause failed: ${err.message || err}`, { id: toastId });
     } finally {
       setIsPauseLoading(false);
     }
@@ -17,8 +22,12 @@ export default function PauseControls() {
 
   const handleUnpause = async () => {
     setIsUnpauseLoading(true);
+    const toastId = toast.loading('Unpausing...');
     try {
       await unpause();
+      toast.success('Contract unpaused!', { id: toastId });
+    } catch (err: any) {
+      toast.error(`Unpause failed: ${err.message || err}`, { id: toastId });
     } finally {
       setIsUnpauseLoading(false);
     }

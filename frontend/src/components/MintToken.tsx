@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTeelToken } from '@/hooks/useTeelToken';
 import type { Address } from 'viem';
+import toast from 'react-hot-toast';
 
 export default function MintTokens() {
   const { mint, symbol } = useTeelToken();
@@ -9,9 +10,16 @@ export default function MintTokens() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleMint = async () => {
+    if (!to || !amount) return;
+
     setIsLoading(true);
+    const toastId = toast.loading('Minting tokens...');
+
     try {
       await mint(to as Address, amount);
+      toast.success('Tokens minted successfully!', { id: toastId });
+    } catch (err: any) {
+      toast.error(`Mint failed: ${err.message || err}`, { id: toastId });
     } finally {
       setIsLoading(false);
     }

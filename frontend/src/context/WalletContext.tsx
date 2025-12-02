@@ -8,6 +8,7 @@ import {
 import { getWalletClient } from '@/lib/viem';
 import { CHAINS, type SupportedChain } from '@/configs/chain';
 import type { WalletClient } from 'viem';
+import toast from 'react-hot-toast';
 
 type WalletContextType = {
   address: `0x${string}` | null;
@@ -15,6 +16,7 @@ type WalletContextType = {
   chainId: number | null;
   networkMismatch: boolean;
   connect: () => Promise<void>;
+  disconnect: () => void;
   switchNetwork?: (targetChainId?: SupportedChain) => Promise<void>;
 };
 
@@ -80,6 +82,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const disconnect = useCallback(() => {
+    // Reset state
+    setAddress(null);
+    setChainId(null);
+    setNetworkMismatch(false);
+
+    // clear the wallet client ref
+    walletClientRef.current = null;
+
+    toast.success('Wallet disconnected');
+  }, []);
+
   return (
     <WalletContext.Provider
       value={{
@@ -88,6 +102,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         chainId,
         networkMismatch,
         connect,
+        disconnect,
         switchNetwork,
       }}
     >
