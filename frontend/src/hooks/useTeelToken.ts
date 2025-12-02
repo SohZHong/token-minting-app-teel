@@ -9,7 +9,7 @@ import { CHAINS, type SupportedChain } from '@/configs/chain';
 import { useTxContext } from '@/context/TxContext';
 
 export const useTeelToken = () => {
-  const { addTx } = useTxContext();
+  const { latestTx, addTx } = useTxContext();
   // Contract address (depends on current chain)
   const [contractAddress, setContractAddress] = useState<`0x${string}` | null>(
     null
@@ -116,13 +116,17 @@ export const useTeelToken = () => {
     fetchBalance();
   }, [fetchTokenInfo, fetchBalance]);
 
-  // Refresh after tx is confirmed
+  // Whenever a transaction is confirmed, refetch balance
   useEffect(() => {
-    if (isConfirmed) {
-      fetchTokenInfo();
+    if (!latestTx) return;
+    if (!contractAddress || networkMismatch || !chainId || !address) return;
+
+    // Only refresh if this tx belongs to this contract
+    if (latestTx.contract === contractAddress) {
       fetchBalance();
+      fetchTokenInfo();
     }
-  }, [isConfirmed, fetchTokenInfo, fetchBalance]);
+  }, [latestTx, contractAddress, networkMismatch, chainId, address]);
 
   // Mint tokens (Owner only)
   const mint = useCallback(

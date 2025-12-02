@@ -6,6 +6,16 @@ export default function MintTokens() {
   const { mint, symbol } = useTeelToken();
   const [to, setTo] = useState('');
   const [amount, setAmount] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleMint = async () => {
+    setIsLoading(true);
+    try {
+      await mint(to as Address, amount);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <section className='p-4 rounded-lg border shadow-sm'>
@@ -29,11 +39,12 @@ export default function MintTokens() {
         />
 
         <button
-          onClick={() => mint(to as Address, amount)}
-          disabled={!to || !amount}
-          className='w-full py-2 bg-green-600 text-white rounded-lg disabled:bg-gray-400 hover:bg-green-700 transition'
+          onClick={handleMint}
+          disabled={!to || !amount || isLoading} // disable while loading
+          className={`w-full py-2 text-white rounded-lg transition
+            ${isLoading ? 'bg-gray-400' : 'bg-green-600 hover:bg-green-700'}`}
         >
-          Mint Tokens
+          {isLoading ? 'Minting...' : 'Mint Tokens'}
         </button>
       </div>
     </section>

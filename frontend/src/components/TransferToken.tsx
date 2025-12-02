@@ -6,6 +6,16 @@ export default function TransferTokens() {
   const { transfer, symbol } = useTeelToken();
   const [to, setTo] = useState('');
   const [amount, setAmount] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleTransfer = async () => {
+    setIsLoading(true);
+    try {
+      await transfer(to as Address, amount);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <section className='p-4 rounded-lg border shadow-sm'>
@@ -27,11 +37,12 @@ export default function TransferTokens() {
         />
 
         <button
-          onClick={() => transfer(to as Address, amount)}
-          disabled={!to || !amount}
-          className='w-full py-2 bg-blue-600 text-white rounded-lg disabled:bg-gray-400 hover:bg-blue-700 transition'
+          onClick={handleTransfer}
+          disabled={!to || !amount || isLoading} // disable while loading
+          className={`w-full py-2 text-white rounded-lg transition
+            ${isLoading ? 'bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'}`}
         >
-          Transfer Tokens
+          {isLoading ? 'Transferring...' : 'Transfer Tokens'}
         </button>
       </div>
     </section>
