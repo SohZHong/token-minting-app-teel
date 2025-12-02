@@ -137,14 +137,35 @@ export const useTeelToken = () => {
     setPaused(pausedState as boolean);
   }, [contractAddress, networkMismatch, chainId]);
 
-  // Initial load after contract is fetched
+  // Reset old state immediately when network or contract changes
   useEffect(() => {
-    if (!contractAddress) return;
+    setName('');
+    setSymbol('');
+    setTotalSupply(0n);
+    setThreshold(0n);
+    setBalance(0n);
+    setPaused(false);
+  }, [contractAddress, networkMismatch]);
 
-    fetchTokenInfo();
-    fetchBalance();
-    fetchPausedState();
-  }, [contractAddress, fetchTokenInfo, fetchBalance, fetchPausedState]);
+  // Fetch token info only when contractAddress exists and network is correct
+  useEffect(() => {
+    if (!contractAddress || networkMismatch || !chainId) return;
+
+    const loadTokenData = async () => {
+      await fetchTokenInfo();
+      await fetchBalance();
+      await fetchPausedState();
+    };
+
+    loadTokenData();
+  }, [
+    contractAddress,
+    networkMismatch,
+    chainId,
+    fetchTokenInfo,
+    fetchBalance,
+    fetchPausedState,
+  ]);
 
   // Whenever a transaction is confirmed, refetch data
   useEffect(() => {

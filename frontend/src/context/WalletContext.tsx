@@ -58,12 +58,17 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   const switchNetwork = useCallback(async (targetChainId?: SupportedChain) => {
     try {
+      // Get wallet client
       const client = walletClientRef.current;
       if (!client) throw new Error('Wallet not connected');
 
-      // If no chain ID provided, pick the first supported chain
+      // Get chain id (defaults to first entry in supported chains if not provided)
       const chainIdToSwitch =
         targetChainId ?? parseInt(Object.keys(CHAINS)[0], 10);
+
+      // Get chain config
+      const chainConfig = CHAINS[chainIdToSwitch as SupportedChain];
+      if (!chainConfig) throw new Error('Unsupported chain');
 
       await client.request({
         method: 'wallet_switchEthereumChain',
@@ -72,12 +77,34 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
       setChainId(chainIdToSwitch);
       setNetworkMismatch(false);
+
+      toast.success(`Switched to ${chainConfig.name}`);
     } catch (switchError: any) {
-      // 4902 = chain not added in wallet
+      // If chain not added in wallet (error 4902)
       if (switchError.code === 4902) {
-        console.warn('Chain not added in wallet');
+        try {
+          const chainIdToSwitch =
+            targetChainId ?? parseInt(Object.keys(CHAINS)[0], 10);
+          const chainConfig = CHAINS[chainIdToSwitch as SupportedChain];
+          await walletClientRef.current?.addChain({ chain: chainConfig });
+
+          toast.success(
+            `${chainConfig.name} added to MetaMask! Switching now...`
+          );
+
+          // After adding, switch again
+          await walletClientRef.current?.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: `0x${chainIdToSwitch.toString(16)}` }],
+          });
+
+          setChainId(chainIdToSwitch);
+          setNetworkMismatch(false);
+        } catch (addError: any) {
+          toast.error(`Failed to add network: ${addError.message}`);
+        }
       } else {
-        console.error('Switch network failed:', switchError);
+        toast.error(`Network switch failed: ${switchError.message}`);
       }
     }
   }, []);
