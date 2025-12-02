@@ -33,35 +33,24 @@ export const useTransaction = (contractAddress: `0x${string}`, abi: any) => {
 
   // Send a single transaction to the contract
   const sendTx = useCallback(
-    async (
-      functionName: string,
-      args: any[] = [],
-      value?: bigint
-    ): Promise<TxState> => {
+    async (functionName: string, args: any[] = [], value?: bigint) => {
       try {
         setPending();
 
-        // Get address from wallet client
         const walletClient = getWalletClient();
-        if (!walletClient) throw new Error('No wallet detected');
+        if (!walletClient) throw new Error('Wallet not found');
 
         const [account] = await walletClient.requestAddresses();
-        // Function data
-        const data = encodeFunctionData({
-          abi,
-          functionName,
-          args,
-        });
 
-        // Send transaction to obtain hash
-        const hash = await walletClient!.sendTransaction({
+        const data = encodeFunctionData({ abi, functionName, args });
+
+        const hash = await walletClient.sendTransaction({
           account,
           to: contractAddress,
           data,
           value: value ?? 0n,
         });
 
-        // Wait for transaction confirmation
         await publicClient.waitForTransactionReceipt({ hash });
 
         setConfirmed(hash);
@@ -72,7 +61,7 @@ export const useTransaction = (contractAddress: `0x${string}`, abi: any) => {
         throw err;
       }
     },
-    [contractAddress, abi]
+    [abi, contractAddress]
   );
 
   return { ...state, sendTx };

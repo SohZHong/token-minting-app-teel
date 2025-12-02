@@ -1,9 +1,13 @@
 import './App.css';
-
+import { WalletProvider } from '@/context/WalletContext';
 import Dashboard from '@/pages/Dashboard';
 
 function App() {
-  return <Dashboard />;
+  return (
+    <WalletProvider>
+      <Dashboard />
+    </WalletProvider>
+  );
 }
 
 export default App;

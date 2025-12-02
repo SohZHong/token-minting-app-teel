@@ -4,7 +4,7 @@ import { publicClient } from '@/lib/viem';
 import type { Address } from 'viem';
 import { useTransaction } from './useTransaction';
 import { CONTRACTS, TEEL_ABI } from '@/constants';
-import { useWallet } from './useWallet';
+import { useWalletContext } from '@/context/WalletContext';
 
 export const useTeelToken = () => {
   // Contract address (depends on current chain)
@@ -15,7 +15,7 @@ export const useTeelToken = () => {
   const [chainId, setChainId] = useState<number | null>(null);
 
   // User
-  const { address, isConnected } = useWallet();
+  const { address, isConnected } = useWalletContext();
 
   // Token info
   const [name, setName] = useState('');
@@ -23,7 +23,6 @@ export const useTeelToken = () => {
   const [totalSupply, setTotalSupply] = useState<bigint>(0n);
   const [threshold, setThreshold] = useState<bigint>(0n);
   const [balance, setBalance] = useState<bigint>(0n);
-
   // Transaction hook
   const { hash, isPending, isConfirmed, error, sendTx } = useTransaction(
     contractAddress ?? '0x0000000000000000000000000000000000000000',
@@ -34,14 +33,20 @@ export const useTeelToken = () => {
   useEffect(() => {
     // Set contract address only after connection
     if (!isConnected) return;
-    const fetchContractAddress = async () => {
-      const chainId = await publicClient.getChainId();
-      setChainId(chainId);
-      const addr = CONTRACTS[chainId]?.TEEL_TOKEN;
-      if (!addr) throw new Error(`No TEEL_TOKEN deployed on chain ${chainId}`);
+
+    const loadChainAndContract = async () => {
+      const id = await publicClient.getChainId();
+      setChainId(id);
+
+      const addr = CONTRACTS[id]?.TEEL_TOKEN;
+      if (!addr) {
+        console.warn(`No TeelToken deployed on chain ${id}`);
+        return;
+      }
       setContractAddress(addr);
     };
-    fetchContractAddress();
+
+    loadChainAndContract();
   }, [isConnected]);
 
   // Fetch token info
@@ -70,6 +75,8 @@ export const useTeelToken = () => {
         functionName: 'threshold',
       }),
     ]);
+    console.log(supply);
+    console.log(name);
     setName(n as string);
     setSymbol(s as string);
     setTotalSupply(supply as bigint);

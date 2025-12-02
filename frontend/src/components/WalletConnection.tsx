@@ -1,7 +1,7 @@
-import { useWallet } from '@/hooks/useWallet';
+import { useWalletContext } from '@/context/WalletContext';
 
 export default function WalletConnection() {
-  const { connect, address, isConnected } = useWallet();
+  const { connect, address, isConnected } = useWalletContext();
 
   return (
     <section className='p-4 rounded-lg border shadow-sm'>
