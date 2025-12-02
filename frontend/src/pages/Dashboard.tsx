@@ -5,6 +5,7 @@ import MintToken from '@/components/MintToken';
 import TransferToken from '@/components/TransferToken';
 import TxStatus from '@/components/TxStatus';
 import NetworkSwitcher from '@/components/NetworkSwitcher';
+import PauseControls from '@/components/PauseControls';
 
 export default function Dashboard() {
   return (
@@ -17,6 +18,7 @@ export default function Dashboard() {
       <UserBalance />
       <MintToken />
       <TransferToken />
+      <PauseControls />
       <TxStatus />
     </div>
   );

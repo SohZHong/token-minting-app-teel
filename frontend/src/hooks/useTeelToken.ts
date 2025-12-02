@@ -23,6 +23,7 @@ export const useTeelToken = () => {
   const [totalSupply, setTotalSupply] = useState<bigint>(0n);
   const [threshold, setThreshold] = useState<bigint>(0n);
   const [balance, setBalance] = useState<bigint>(0n);
+  const [paused, setPaused] = useState(false);
 
   // Only create the transaction hook once the contract exists
   const { hash, isPending, isConfirmed, error, sendTx } = useTransaction(
@@ -110,21 +111,43 @@ export const useTeelToken = () => {
     setBalance(bal as bigint);
   }, [address, contractAddress, networkMismatch, chainId]);
 
+  const fetchPausedState = useCallback(async () => {
+    if (!contractAddress || networkMismatch || !chainId) return;
+
+    const client = getPublicClient(chainId as SupportedChain);
+
+    const pausedState = await client.readContract({
+      address: contractAddress,
+      abi: TEEL_ABI,
+      functionName: 'paused',
+    });
+
+    setPaused(pausedState as boolean);
+  }, [contractAddress, networkMismatch, chainId]);
+
   // Initial load
   useEffect(() => {
     fetchTokenInfo();
     fetchBalance();
-  }, [fetchTokenInfo, fetchBalance]);
+    fetchPausedState();
+  }, [fetchTokenInfo, fetchBalance, fetchPausedState]);
 
-  // Whenever a transaction is confirmed, refetch balance
+  // Whenever a transaction is confirmed, refetch data
   useEffect(() => {
-    if (!latestTx) return;
-    if (!contractAddress || networkMismatch || !chainId || !address) return;
+    if (
+      !latestTx ||
+      !contractAddress ||
+      !chainId ||
+      !address ||
+      networkMismatch
+    )
+      return;
 
     // Only refresh if this tx belongs to this contract
     if (latestTx.contract === contractAddress) {
       fetchBalance();
       fetchTokenInfo();
+      fetchPausedState();
     }
   }, [latestTx, contractAddress, networkMismatch, chainId, address]);
 
@@ -164,6 +187,30 @@ export const useTeelToken = () => {
     [sendTx, contractAddress, addTx, chainId]
   );
 
+  // Pause operations
+  const pause = useCallback(async () => {
+    if (!contractAddress) return;
+
+    const result = await sendTx('pauseMinting', []);
+    addTx({
+      hash: result.hash,
+      chainId: chainId as SupportedChain,
+      contract: contractAddress,
+    });
+  }, [sendTx, contractAddress, addTx, chainId]);
+
+  // Unpause operations
+  const unpause = useCallback(async () => {
+    if (!contractAddress) return;
+
+    const result = await sendTx('unpauseMinting', []);
+    addTx({
+      hash: result.hash,
+      chainId: chainId as SupportedChain,
+      contract: contractAddress,
+    });
+  }, [sendTx, contractAddress, addTx, chainId]);
+
   // Human readable values to return to frontend
   const formattedBalance = formatUnits(balance, 18);
   const formattedTotalSupply = formatUnits(totalSupply, 18);
@@ -182,10 +229,13 @@ export const useTeelToken = () => {
     totalSupply: formattedTotalSupply,
     threshold: formattedThreshold,
     balance: formattedBalance,
+    paused,
 
     // Transactions
     mint,
     transfer,
+    pause,
+    unpause,
     hash,
     isPending,
     isConfirmed,
