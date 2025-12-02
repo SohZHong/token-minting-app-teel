@@ -121,7 +121,8 @@ if (keccak256(bytes(network)) == keccak256(bytes("sepolia"))) {
 }
 // Add on alfajores here with else if
 else if (keccak256(bytes(network)) == keccak256(bytes("alfajores"))){
-
+    vm.createSelectFork("alfajores");
+    console.log("Deploying to Alfajores testnet...");
 }
 // ... else
 ```
@@ -130,3 +131,4 @@ This allows you to call the deployment command without any changes to deploy on 
 
 > [!IMPORTANT]
 > If the network is not defined in `foundry.toml`, the script will default to deploying locally.
+> Remember to reload `.env` using `source .env` command.
