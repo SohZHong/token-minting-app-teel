@@ -11,12 +11,27 @@ The app allows users to:
 - Transfer tokens between addresses.
 - Pause and unpause token minting.
 
-## Tech Stack
+The project is structured as a monorepo with `contract/` for smart contracts and `frontend/` for the web app.
 
-- **Smart Contract:** Solidity, Foundry
-- **Frontend:** React (Vite), TailwindCSS, viem
-- **Blockchain:** Local Anvil network and Ethereum testnet (Sepolia)
-- **Wallet Integration:** MetaMask and other EVM-compatible wallets
+## Tech Stack & Main Libraries
+
+- **Smart Contracts**
+
+  - Solidity (v0.8.20)
+  - Foundry (forge, forge-std\_
+  - Oppenzeppelin
+
+- **Frontend**
+
+  - React (Vite)
+  - TailwindCSS for styling
+  - viem for blockchain interaction
+  - MetaMask / EVM wallet support
+
+- **Blockchain / Networks**
+  - Local Anvil (Hardhat/Foundry)
+  - Sepolia Testnet
+  - Easily configurable for additional networks
 
 ## Repository Structure
 
